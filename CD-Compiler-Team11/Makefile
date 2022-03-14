@@ -3,6 +3,6 @@ parser: y.tab.c lex.yy.c y.tab.h
 lex.yy.c: lexer.l
 	lex lexer.l
 y.tab.c: NewParser.y
-	yacc -v -d NewParser.y
+	yacc -v -d -Wcounterexamples NewParser.y
 clean:
 	rm -f parser y.tab.c lex.yy.c y.tab.h y.output

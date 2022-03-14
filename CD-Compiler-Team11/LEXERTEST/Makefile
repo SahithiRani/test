@@ -1,5 +1,5 @@
 lexer: lex.yy.c
-	g++ lex.yy.c  -g  -o lexer
+	g++ lex.yy.c  -g -ll -o lexer
 lex.yy.c: TestLexer.l
 	lex TestLexer.l
 clean:

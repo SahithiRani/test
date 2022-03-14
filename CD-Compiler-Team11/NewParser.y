@@ -12,15 +12,18 @@ extern FILE * yyin;
 %union{
       int yint;
       double ydou;
-      char* ystr;
+      char ystr[300];
 }
 
 %token ADD SUB MUL DIV ASSIGN AND OR XOR LTE GTE EQ NEQ NOT
-%token INT_CONST BOOL_CONST
-%token FLOAT_CONST
-%token STR_CONST ID 
-%token IF ELSE ELIF LOOP SHOW TAKE RET VOID START INT DOUBLE STR BOOL ARR BREAK CONT NEWL HASH QUO SQUO BASL BASP
+%token <yint> INT_CONST BOOL_CONST
+%token <ydou> FLOAT_CONST
+%token <ystr> STR_CONST ID 
+%token IF ELSE ELIF LOOP VOID 
+%token INT DOUBLE BOOLEAN CHAR BREAK
+%token PRINT SCAN FUNC RETURN CONTINUE 
 
+%token ';' '<' '>' '{' '}' '(' ')' '[' ']' ','
 // %token program functions function function_name data_type params param_list param
 // %token stmts_list stmt withSemcol withoutSemcol
 // %token array_decl return_stmt func_call func_type
@@ -28,11 +31,13 @@ extern FILE * yyin;
 // %token expr array_assign assign_stmt assignment args_list args id_list
 // %token constant arr value
 
-
-
 %%
 program:                         
       items_list              {printf("No Of Lines Parsed: %d\n",LINECOUNT);}
+      
+      |
+
+      error 
       ;
 items_list: item items_list
 
@@ -43,7 +48,7 @@ item:
       function | stmt
 
 function:                         
-      function_name '{' stmts_list '}' ;
+      FUNC function_name '{' stmts_list '}' ;
 
 function_name:                    
       data_type ID '(' params ')' ;
@@ -67,7 +72,7 @@ stmts_list:
       ;
 
 stmt:                             
-      withSemcol ';'          {printf("LINECOUNT for Stmt is %d",LINECOUNT);}
+      {printf("LINECOUNT for Stmt is %d",LINECOUNT);} withSemcol ';'          
       
       | withoutSemcol 
       ;
@@ -85,7 +90,7 @@ withSemcol:
       
       | BREAK 
       
-      | CONT 
+      | CONTINUE 
       ;
       
 withoutSemcol:                    
@@ -126,18 +131,16 @@ boolean:
       ;
 
 return_stmt:                      
-      RET expr 
+      RETURN expr 
       ;
 
 array_decl:                       
-      ARR '<' data_type ',' INT_CONST '>' ID array_assign 
+      param '[' INT_CONST ']' array_assign 
       ;
 
 func_call:                        
-      func_type '(' args_list ')' 
+      ID '(' args_list ')' 
       ;
-
-func_type: SHOW 
       
 
 args_list:                        
@@ -191,9 +194,9 @@ arr:
 data_type:                        
       INT 
       
-      | BOOL 
+      | BOOLEAN 
       
-      | STR 
+      | CHAR 
     
       | DOUBLE 
       
@@ -250,7 +253,7 @@ constant:
 %%
 
 int yyerror(char *s) {
-  printf("\nError: %s...... LINECOUNT:%d\n",s,LINECOUNT);
+//   printf("\nError: %s...... LINECOUNT:%d\n",s,LINECOUNT);
   return 0;
 }
 

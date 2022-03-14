@@ -1,7 +1,7 @@
 # Program to print sum of first n natural numbers 
 
-notaNumber=100;
 int notaNumber;
+aNumber=100;
 print("Enter a positive integer: "); 
 
 int sum=0;
