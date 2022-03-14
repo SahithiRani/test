@@ -1,8 +1,27 @@
+Nonterminals useless in grammar
+
+    arr_optional_assign
+
+
 Terminals unused in grammar
 
     ELIF
-    PRINT
-    SCAN
+
+
+Rules useless in grammar
+
+   92 arr_optional_assign: arrayBRACKETS
+   93                    | opt_assign
+
+
+Rules useless in parser due to conflicts
+
+   39 isARRAY: %empty
+
+
+State 2 conflicts: 1 shift/reduce, 17 reduce/reduce
+State 69 conflicts: 1 shift/reduce, 2 reduce/reduce
+State 135 conflicts: 1 shift/reduce
 
 
 Grammar
@@ -28,293 +47,332 @@ Grammar
    11 param_list: param_list ',' param
    12           | param
 
-   13 stmts_list: stmt stmts_list
-   14           | %empty
+   13 param: data_type ID arrayBRACKETS
 
-   15 $@1: %empty
+   14 arrayBRACKETS: '[' INT_CONST ']'
+   15              | arrayBRACKETS '[' INT_CONST ']'
+   16              | %empty
 
-   16 stmt: $@1 withSemcol ';'
-   17     | withoutSemcol
+   17 stmts_list: stmt stmts_list
+   18           | %empty
 
-   18 withSemcol: param
-   19           | assign_stmt
-   20           | array_decl
-   21           | return_stmt
-   22           | func_call
-   23           | BREAK
-   24           | CONTINUE
+   19 stmt: withSemcol ';'
+   20     | withoutSemcol
 
-   25 withoutSemcol: loop
-   26              | conditional
+   21 withSemcol: DECLARATION
+   22           | assign_stmt
+   23           | return_stmt
+   24           | func_call
+   25           | BREAK
+   26           | CONTINUE
+   27           | printSTMT
 
-   27 assign_stmt: param assignment
-   28            | arr assignment
+   28 withoutSemcol: loop
+   29              | conditional
 
-   29 loop: LOOP
+   30 DECLARATION: data_type id_LIST
 
-   30 conditional: IF '(' conditions ')' '{' stmts_list '}' else_stmt
+   31 id_LIST: oneID ',' id_LIST
+   32        | oneID
 
-   31 else_stmt: ELSE '{' stmts_list '}'
-   32          | %empty
+   33 oneID: ID opt_assign
 
-   33 conditions: boolean
-   34           | boolean bi_logic_cond conditions
-   35           | NOT conditions
+   34 opt_assign: ASSIGN expr
+   35           | %empty
 
-   36 boolean: boolean rel_op expr
-   37        | expr
+   36 assign_stmt: LHS ASSIGN RHS
 
-   38 return_stmt: RETURN expr
+   37 LHS: ID isARRAY
 
-   39 array_decl: param '[' INT_CONST ']' array_assign
+   38 isARRAY: arrayBRACKETS
+   39        | %empty
 
-   40 func_call: ID '(' args_list ')'
+   40 RHS: expr
+   41    | SCAN '(' data_type ')'
 
-   41 args_list: args
-   42          | %empty
+   42 return_stmt: RETURN expr
 
-   43 args: args ',' expr
-   44     | expr
+   43 printSTMT: PRINT '(' printables ')'
 
-   45 array_assign: ASSIGN '[' id_list ']'
-   46             | %empty
+   44 printables: printables '+' printable
+   45           | printable
 
-   47 id_list: id_list ',' constant
-   48        | constant
+   46 printable: STR_CONST
+   47          | LHS
 
-   49 param: data_type ID
+   48 func_call: ID '(' args_list ')'
 
-   50 assignment: ASSIGN expr
+   49 args_list: args
+   50          | %empty
 
-   51 expr: expr op value
-   52     | value
+   51 args: args ',' expr
+   52     | expr
 
-   53 value: func_call
-   54      | constant
-   55      | arr
+   53 expr: expr op value
+   54     | value
 
-   56 arr: ID '[' expr ']'
-   57    | ID
+   55 value: func_call
+   56      | constant
+   57      | LHS
 
-   58 data_type: INT
-   59          | BOOLEAN
-   60          | CHAR
-   61          | DOUBLE
-   62          | VOID
+   58 loop: LOOP '(' conditions ')' '{' stmts_list '}'
 
-   63 op: ADD
-   64   | SUB
-   65   | MUL
-   66   | DIV
+   59 conditional: IF '(' conditions ')' '{' stmts_list '}' else_stmt
 
-   67 rel_op: LTE
-   68       | GTE
-   69       | '<'
-   70       | '>'
-   71       | EQ
-   72       | NEQ
+   60 else_stmt: ELSE '{' stmts_list '}'
+   61          | %empty
 
-   73 bi_logic_cond: AND
-   74              | OR
-   75              | XOR
+   62 conditions: boolean
+   63           | boolean bi_logic_OP conditions
+   64           | NOT conditions
+   65           | '(' conditions ')'
 
-   76 constant: INT_CONST
-   77         | SUB INT_CONST
-   78         | STR_CONST
-   79         | BOOL_CONST
-   80         | FLOAT_CONST
-   81         | SUB FLOAT_CONST
+   66 boolean: boolean rel_op expr
+   67        | expr
+
+   68 data_type: INT
+   69          | BOOLEAN
+   70          | CHAR
+   71          | DOUBLE
+   72          | VOID
+
+   73 op: ADD
+   74   | SUB
+   75   | MUL
+   76   | DIV
+
+   77 rel_op: LTE
+   78       | GTE
+   79       | '<'
+   80       | '>'
+   81       | EQ
+   82       | NEQ
+
+   83 bi_logic_OP: AND
+   84            | OR
+   85            | XOR
+
+   86 constant: INT_CONST
+   87         | SUB INT_CONST
+   88         | STR_CONST
+   89         | BOOL_CONST
+   90         | FLOAT_CONST
+   91         | SUB FLOAT_CONST
 
 
 Terminals, with rules where they appear
 
     $end (0) 0
-    '(' (40) 8 30 40
-    ')' (41) 8 30 40
-    ',' (44) 11 43 47
-    ';' (59) 16
-    '<' (60) 69
-    '>' (62) 70
-    '[' (91) 39 45 56
-    ']' (93) 39 45 56
-    '{' (123) 7 30 31
-    '}' (125) 7 30 31
+    '(' (40) 8 41 43 48 58 59 65
+    ')' (41) 8 41 43 48 58 59 65
+    '+' (43) 44
+    ',' (44) 11 31 51
+    ';' (59) 19
+    '<' (60) 79
+    '>' (62) 80
+    '[' (91) 14 15
+    ']' (93) 14 15
+    '{' (123) 7 58 59 60
+    '}' (125) 7 58 59 60
     error (256) 2
-    ADD (258) 63
-    SUB (259) 64 77 81
-    MUL (260) 65
-    DIV (261) 66
-    ASSIGN (262) 45 50
-    AND (263) 73
-    OR (264) 74
-    XOR (265) 75
-    LTE (266) 67
-    GTE (267) 68
-    EQ (268) 71
-    NEQ (269) 72
-    NOT (270) 35
-    INT_CONST <yint> (271) 39 76 77
-    BOOL_CONST <yint> (272) 79
-    FLOAT_CONST <ydou> (273) 80 81
-    STR_CONST <ystr> (274) 78
-    ID <ystr> (275) 8 40 49 56 57
-    IF (276) 30
-    ELSE (277) 31
+    ADD (258) 73
+    SUB (259) 74 87 91
+    MUL (260) 75
+    DIV (261) 76
+    ASSIGN (262) 34 36
+    AND (263) 83
+    OR (264) 84
+    XOR (265) 85
+    LTE (266) 77
+    GTE (267) 78
+    EQ (268) 81
+    NEQ (269) 82
+    NOT (270) 64
+    INT_CONST <yint> (271) 14 15 86 87
+    BOOL_CONST <yint> (272) 89
+    FLOAT_CONST <ydou> (273) 90 91
+    STR_CONST <ystr> (274) 46 88
+    ID <ystr> (275) 8 13 33 37 48
+    IF (276) 59
+    ELSE (277) 60
     ELIF (278)
-    LOOP (279) 29
-    VOID (280) 62
-    INT (281) 58
-    DOUBLE (282) 61
-    BOOLEAN (283) 59
-    CHAR (284) 60
-    BREAK (285) 23
-    PRINT (286)
-    SCAN (287)
+    LOOP (279) 58
+    VOID (280) 72
+    INT (281) 68
+    DOUBLE (282) 71
+    BOOLEAN (283) 69
+    CHAR (284) 70
+    BREAK (285) 25
+    PRINT (286) 43
+    SCAN (287) 41
     FUNC (288) 7
-    RETURN (289) 38
-    CONTINUE (290) 24
+    RETURN (289) 42
+    CONTINUE (290) 26
 
 
 Nonterminals, with rules where they appear
 
-    $accept (46)
+    $accept (47)
         on left: 0
-    program (47)
+    program (48)
         on left: 1 2
         on right: 0
-    items_list (48)
+    items_list (49)
         on left: 3 4
         on right: 1 3
-    item (49)
+    item (50)
         on left: 5 6
         on right: 3
-    function (50)
+    function (51)
         on left: 7
         on right: 5
-    function_name (51)
+    function_name (52)
         on left: 8
         on right: 7
-    params (52)
+    params (53)
         on left: 9 10
         on right: 8
-    param_list (53)
+    param_list (54)
         on left: 11 12
         on right: 9 11
-    stmts_list (54)
-        on left: 13 14
-        on right: 7 13 30 31
-    stmt (55)
-        on left: 16 17
-        on right: 6 13
-    $@1 (56)
-        on left: 15
-        on right: 16
-    withSemcol (57)
-        on left: 18 19 20 21 22 23 24
-        on right: 16
-    withoutSemcol (58)
-        on left: 25 26
-        on right: 17
-    assign_stmt (59)
-        on left: 27 28
+    param (55)
+        on left: 13
+        on right: 11 12
+    arrayBRACKETS (56)
+        on left: 14 15 16
+        on right: 13 15 38
+    stmts_list (57)
+        on left: 17 18
+        on right: 7 17 58 59 60
+    stmt (58)
+        on left: 19 20
+        on right: 6 17
+    withSemcol (59)
+        on left: 21 22 23 24 25 26 27
         on right: 19
-    loop (60)
-        on left: 29
-        on right: 25
-    conditional (61)
-        on left: 30
-        on right: 26
-    else_stmt (62)
-        on left: 31 32
-        on right: 30
-    conditions (63)
-        on left: 33 34 35
-        on right: 30 34 35
-    boolean (64)
-        on left: 36 37
-        on right: 33 34 36
-    return_stmt (65)
-        on left: 38
-        on right: 21
-    array_decl (66)
-        on left: 39
+    withoutSemcol (60)
+        on left: 28 29
         on right: 20
-    func_call (67)
-        on left: 40
-        on right: 22 53
-    args_list (68)
-        on left: 41 42
-        on right: 40
-    args (69)
-        on left: 43 44
-        on right: 41 43
-    array_assign (70)
-        on left: 45 46
-        on right: 39
-    id_list (71)
-        on left: 47 48
-        on right: 45 47
-    param (72)
-        on left: 49
-        on right: 11 12 18 27 39
-    assignment (73)
-        on left: 50
-        on right: 27 28
-    expr (74)
-        on left: 51 52
-        on right: 36 37 38 43 44 50 51 56
-    value (75)
-        on left: 53 54 55
-        on right: 51 52
-    arr (76)
-        on left: 56 57
-        on right: 28 55
-    data_type (77)
-        on left: 58 59 60 61 62
-        on right: 8 49
-    op (78)
-        on left: 63 64 65 66
-        on right: 51
-    rel_op (79)
-        on left: 67 68 69 70 71 72
+    DECLARATION (61)
+        on left: 30
+        on right: 21
+    id_LIST (62)
+        on left: 31 32
+        on right: 30 31
+    oneID (63)
+        on left: 33
+        on right: 31 32
+    opt_assign (64)
+        on left: 34 35
+        on right: 33
+    assign_stmt (65)
+        on left: 36
+        on right: 22
+    LHS (66)
+        on left: 37
+        on right: 36 47 57
+    isARRAY (67)
+        on left: 38 39
+        on right: 37
+    RHS (68)
+        on left: 40 41
         on right: 36
-    bi_logic_cond (80)
-        on left: 73 74 75
-        on right: 34
-    constant (81)
-        on left: 76 77 78 79 80 81
-        on right: 47 48 54
+    return_stmt (69)
+        on left: 42
+        on right: 23
+    printSTMT (70)
+        on left: 43
+        on right: 27
+    printables (71)
+        on left: 44 45
+        on right: 43 44
+    printable (72)
+        on left: 46 47
+        on right: 44 45
+    func_call (73)
+        on left: 48
+        on right: 24 55
+    args_list (74)
+        on left: 49 50
+        on right: 48
+    args (75)
+        on left: 51 52
+        on right: 49 51
+    expr (76)
+        on left: 53 54
+        on right: 34 40 42 51 52 53 66 67
+    value (77)
+        on left: 55 56 57
+        on right: 53 54
+    loop (78)
+        on left: 58
+        on right: 28
+    conditional (79)
+        on left: 59
+        on right: 29
+    else_stmt (80)
+        on left: 60 61
+        on right: 59
+    conditions (81)
+        on left: 62 63 64 65
+        on right: 58 59 63 64 65
+    boolean (82)
+        on left: 66 67
+        on right: 62 63 66
+    data_type (83)
+        on left: 68 69 70 71 72
+        on right: 8 13 30 41
+    op (84)
+        on left: 73 74 75 76
+        on right: 53
+    rel_op (85)
+        on left: 77 78 79 80 81 82
+        on right: 66
+    bi_logic_OP (86)
+        on left: 83 84 85
+        on right: 63
+    constant (87)
+        on left: 86 87 88 89 90 91
+        on right: 56
 
 
 State 0
 
     0 $accept: • program $end
 
-    error  shift, and go to state 1
-    IF     shift, and go to state 2
-    LOOP   shift, and go to state 3
-    FUNC   shift, and go to state 4
+    error     shift, and go to state 1
+    ID        shift, and go to state 2
+    IF        shift, and go to state 3
+    LOOP      shift, and go to state 4
+    VOID      shift, and go to state 5
+    INT       shift, and go to state 6
+    DOUBLE    shift, and go to state 7
+    BOOLEAN   shift, and go to state 8
+    CHAR      shift, and go to state 9
+    BREAK     shift, and go to state 10
+    PRINT     shift, and go to state 11
+    FUNC      shift, and go to state 12
+    RETURN    shift, and go to state 13
+    CONTINUE  shift, and go to state 14
 
-    $end      reduce using rule 4 (items_list)
-    ID        reduce using rule 15 ($@1)
-    VOID      reduce using rule 15 ($@1)
-    INT       reduce using rule 15 ($@1)
-    DOUBLE    reduce using rule 15 ($@1)
-    BOOLEAN   reduce using rule 15 ($@1)
-    CHAR      reduce using rule 15 ($@1)
-    BREAK     reduce using rule 15 ($@1)
-    RETURN    reduce using rule 15 ($@1)
-    CONTINUE  reduce using rule 15 ($@1)
+    $end  reduce using rule 4 (items_list)
 
-    program        go to state 5
-    items_list     go to state 6
-    item           go to state 7
-    function       go to state 8
-    stmt           go to state 9
-    $@1            go to state 10
-    withoutSemcol  go to state 11
-    loop           go to state 12
-    conditional    go to state 13
+    program        go to state 15
+    items_list     go to state 16
+    item           go to state 17
+    function       go to state 18
+    stmt           go to state 19
+    withSemcol     go to state 20
+    withoutSemcol  go to state 21
+    DECLARATION    go to state 22
+    assign_stmt    go to state 23
+    LHS            go to state 24
+    return_stmt    go to state 25
+    printSTMT      go to state 26
+    func_call      go to state 27
+    loop           go to state 28
+    conditional    go to state 29
+    data_type      go to state 30
 
 
 State 1
@@ -326,1169 +384,1633 @@ State 1
 
 State 2
 
-   30 conditional: IF • '(' conditions ')' '{' stmts_list '}' else_stmt
+   37 LHS: ID • isARRAY
+   48 func_call: ID • '(' args_list ')'
 
-    '('  shift, and go to state 14
+    '('  shift, and go to state 31
+    '['  shift, and go to state 32
+
+    ADD       reduce using rule 16 (arrayBRACKETS)
+    ADD       [reduce using rule 39 (isARRAY)]
+    SUB       reduce using rule 16 (arrayBRACKETS)
+    SUB       [reduce using rule 39 (isARRAY)]
+    MUL       reduce using rule 16 (arrayBRACKETS)
+    MUL       [reduce using rule 39 (isARRAY)]
+    DIV       reduce using rule 16 (arrayBRACKETS)
+    DIV       [reduce using rule 39 (isARRAY)]
+    ASSIGN    reduce using rule 16 (arrayBRACKETS)
+    ASSIGN    [reduce using rule 39 (isARRAY)]
+    AND       reduce using rule 16 (arrayBRACKETS)
+    AND       [reduce using rule 39 (isARRAY)]
+    OR        reduce using rule 16 (arrayBRACKETS)
+    OR        [reduce using rule 39 (isARRAY)]
+    XOR       reduce using rule 16 (arrayBRACKETS)
+    XOR       [reduce using rule 39 (isARRAY)]
+    LTE       reduce using rule 16 (arrayBRACKETS)
+    LTE       [reduce using rule 39 (isARRAY)]
+    GTE       reduce using rule 16 (arrayBRACKETS)
+    GTE       [reduce using rule 39 (isARRAY)]
+    EQ        reduce using rule 16 (arrayBRACKETS)
+    EQ        [reduce using rule 39 (isARRAY)]
+    NEQ       reduce using rule 16 (arrayBRACKETS)
+    NEQ       [reduce using rule 39 (isARRAY)]
+    ';'       reduce using rule 16 (arrayBRACKETS)
+    ';'       [reduce using rule 39 (isARRAY)]
+    '<'       reduce using rule 16 (arrayBRACKETS)
+    '<'       [reduce using rule 39 (isARRAY)]
+    '>'       reduce using rule 16 (arrayBRACKETS)
+    '>'       [reduce using rule 39 (isARRAY)]
+    ')'       reduce using rule 16 (arrayBRACKETS)
+    ')'       [reduce using rule 39 (isARRAY)]
+    '['       [reduce using rule 16 (arrayBRACKETS)]
+    ','       reduce using rule 16 (arrayBRACKETS)
+    ','       [reduce using rule 39 (isARRAY)]
+    $default  reduce using rule 16 (arrayBRACKETS)
+
+    arrayBRACKETS  go to state 33
+    isARRAY        go to state 34
+
+    shift/reduce conflict on token '[':
+       16 arrayBRACKETS: • %empty
+       14 arrayBRACKETS: • '[' INT_CONST ']'
+      First example: ID • '[' INT_CONST ']' ';' items_list $end
+      Shift derivation
+        $accept
+        ↳ program                                               $end
+          ↳ items_list
+            ↳ item                                   items_list
+              ↳ stmt
+                ↳ withSemcol                     ';'
+                  ↳ LHS
+                    ↳ ID isARRAY
+                         ↳ arrayBRACKETS
+                           ↳ • '[' INT_CONST ']'
+      Second example: ID • '[' INT_CONST ']' ASSIGN RHS ';' items_list $end
+      Reduce derivation
+        $accept
+        ↳ program                                                                        $end
+          ↳ items_list
+            ↳ item                                                            items_list
+              ↳ stmt
+                ↳ withSemcol                                              ';'
+                  ↳ assign_stmt
+                    ↳ LHS                                      ASSIGN RHS
+                      ↳ ID isARRAY
+                           ↳ arrayBRACKETS
+                             ↳ arrayBRACKETS '[' INT_CONST ']'
+                               ↳ •
+
+    reduce/reduce conflict on tokens ADD, SUB, MUL, DIV, ASSIGN, AND, OR, XOR, LTE, GTE, EQ, NEQ, ';', '<', '>', ')', ',':
+       16 arrayBRACKETS: • %empty
+       39 isARRAY: • %empty
+      Example: •
+      First reduce derivation
+        isARRAY
+        ↳ arrayBRACKETS
+          ↳ •
+      Second reduce derivation
+        isARRAY
+        ↳ •
+
 
 
 State 3
 
-   29 loop: LOOP •
+   59 conditional: IF • '(' conditions ')' '{' stmts_list '}' else_stmt
 
-    $default  reduce using rule 29 (loop)
+    '('  shift, and go to state 35
 
 
 State 4
 
-    7 function: FUNC • function_name '{' stmts_list '}'
+   58 loop: LOOP • '(' conditions ')' '{' stmts_list '}'
 
-    VOID     shift, and go to state 15
-    INT      shift, and go to state 16
-    DOUBLE   shift, and go to state 17
-    BOOLEAN  shift, and go to state 18
-    CHAR     shift, and go to state 19
-
-    function_name  go to state 20
-    data_type      go to state 21
+    '('  shift, and go to state 36
 
 
 State 5
 
-    0 $accept: program • $end
+   72 data_type: VOID •
 
-    $end  shift, and go to state 22
+    $default  reduce using rule 72 (data_type)
 
 
 State 6
+
+   68 data_type: INT •
+
+    $default  reduce using rule 68 (data_type)
+
+
+State 7
+
+   71 data_type: DOUBLE •
+
+    $default  reduce using rule 71 (data_type)
+
+
+State 8
+
+   69 data_type: BOOLEAN •
+
+    $default  reduce using rule 69 (data_type)
+
+
+State 9
+
+   70 data_type: CHAR •
+
+    $default  reduce using rule 70 (data_type)
+
+
+State 10
+
+   25 withSemcol: BREAK •
+
+    $default  reduce using rule 25 (withSemcol)
+
+
+State 11
+
+   43 printSTMT: PRINT • '(' printables ')'
+
+    '('  shift, and go to state 37
+
+
+State 12
+
+    7 function: FUNC • function_name '{' stmts_list '}'
+
+    VOID     shift, and go to state 5
+    INT      shift, and go to state 6
+    DOUBLE   shift, and go to state 7
+    BOOLEAN  shift, and go to state 8
+    CHAR     shift, and go to state 9
+
+    function_name  go to state 38
+    data_type      go to state 39
+
+
+State 13
+
+   42 return_stmt: RETURN • expr
+
+    SUB          shift, and go to state 40
+    INT_CONST    shift, and go to state 41
+    BOOL_CONST   shift, and go to state 42
+    FLOAT_CONST  shift, and go to state 43
+    STR_CONST    shift, and go to state 44
+    ID           shift, and go to state 2
+
+    LHS        go to state 45
+    func_call  go to state 46
+    expr       go to state 47
+    value      go to state 48
+    constant   go to state 49
+
+
+State 14
+
+   26 withSemcol: CONTINUE •
+
+    $default  reduce using rule 26 (withSemcol)
+
+
+State 15
+
+    0 $accept: program • $end
+
+    $end  shift, and go to state 50
+
+
+State 16
 
     1 program: items_list •
 
     $default  reduce using rule 1 (program)
 
 
-State 7
+State 17
 
     3 items_list: item • items_list
 
-    IF    shift, and go to state 2
-    LOOP  shift, and go to state 3
-    FUNC  shift, and go to state 4
+    ID        shift, and go to state 2
+    IF        shift, and go to state 3
+    LOOP      shift, and go to state 4
+    VOID      shift, and go to state 5
+    INT       shift, and go to state 6
+    DOUBLE    shift, and go to state 7
+    BOOLEAN   shift, and go to state 8
+    CHAR      shift, and go to state 9
+    BREAK     shift, and go to state 10
+    PRINT     shift, and go to state 11
+    FUNC      shift, and go to state 12
+    RETURN    shift, and go to state 13
+    CONTINUE  shift, and go to state 14
 
-    $end      reduce using rule 4 (items_list)
-    $default  reduce using rule 15 ($@1)
+    $default  reduce using rule 4 (items_list)
 
-    items_list     go to state 23
-    item           go to state 7
-    function       go to state 8
-    stmt           go to state 9
-    $@1            go to state 10
-    withoutSemcol  go to state 11
-    loop           go to state 12
-    conditional    go to state 13
+    items_list     go to state 51
+    item           go to state 17
+    function       go to state 18
+    stmt           go to state 19
+    withSemcol     go to state 20
+    withoutSemcol  go to state 21
+    DECLARATION    go to state 22
+    assign_stmt    go to state 23
+    LHS            go to state 24
+    return_stmt    go to state 25
+    printSTMT      go to state 26
+    func_call      go to state 27
+    loop           go to state 28
+    conditional    go to state 29
+    data_type      go to state 30
 
 
-State 8
+State 18
 
     5 item: function •
 
     $default  reduce using rule 5 (item)
 
 
-State 9
+State 19
 
     6 item: stmt •
 
     $default  reduce using rule 6 (item)
 
 
-State 10
-
-   16 stmt: $@1 • withSemcol ';'
-
-    ID        shift, and go to state 24
-    VOID      shift, and go to state 15
-    INT       shift, and go to state 16
-    DOUBLE    shift, and go to state 17
-    BOOLEAN   shift, and go to state 18
-    CHAR      shift, and go to state 19
-    BREAK     shift, and go to state 25
-    RETURN    shift, and go to state 26
-    CONTINUE  shift, and go to state 27
-
-    withSemcol   go to state 28
-    assign_stmt  go to state 29
-    return_stmt  go to state 30
-    array_decl   go to state 31
-    func_call    go to state 32
-    param        go to state 33
-    arr          go to state 34
-    data_type    go to state 35
-
-
-State 11
-
-   17 stmt: withoutSemcol •
-
-    $default  reduce using rule 17 (stmt)
-
-
-State 12
-
-   25 withoutSemcol: loop •
-
-    $default  reduce using rule 25 (withoutSemcol)
-
-
-State 13
-
-   26 withoutSemcol: conditional •
-
-    $default  reduce using rule 26 (withoutSemcol)
-
-
-State 14
-
-   30 conditional: IF '(' • conditions ')' '{' stmts_list '}' else_stmt
-
-    SUB          shift, and go to state 36
-    NOT          shift, and go to state 37
-    INT_CONST    shift, and go to state 38
-    BOOL_CONST   shift, and go to state 39
-    FLOAT_CONST  shift, and go to state 40
-    STR_CONST    shift, and go to state 41
-    ID           shift, and go to state 24
-
-    conditions  go to state 42
-    boolean     go to state 43
-    func_call   go to state 44
-    expr        go to state 45
-    value       go to state 46
-    arr         go to state 47
-    constant    go to state 48
-
-
-State 15
-
-   62 data_type: VOID •
-
-    $default  reduce using rule 62 (data_type)
-
-
-State 16
-
-   58 data_type: INT •
-
-    $default  reduce using rule 58 (data_type)
-
-
-State 17
-
-   61 data_type: DOUBLE •
-
-    $default  reduce using rule 61 (data_type)
-
-
-State 18
-
-   59 data_type: BOOLEAN •
-
-    $default  reduce using rule 59 (data_type)
-
-
-State 19
-
-   60 data_type: CHAR •
-
-    $default  reduce using rule 60 (data_type)
-
-
 State 20
 
-    7 function: FUNC function_name • '{' stmts_list '}'
+   19 stmt: withSemcol • ';'
 
-    '{'  shift, and go to state 49
+    ';'  shift, and go to state 52
 
 
 State 21
 
-    8 function_name: data_type • ID '(' params ')'
+   20 stmt: withoutSemcol •
 
-    ID  shift, and go to state 50
+    $default  reduce using rule 20 (stmt)
 
 
 State 22
 
-    0 $accept: program $end •
+   21 withSemcol: DECLARATION •
 
-    $default  accept
+    $default  reduce using rule 21 (withSemcol)
 
 
 State 23
 
-    3 items_list: item items_list •
+   22 withSemcol: assign_stmt •
 
-    $default  reduce using rule 3 (items_list)
+    $default  reduce using rule 22 (withSemcol)
 
 
 State 24
 
-   40 func_call: ID • '(' args_list ')'
-   56 arr: ID • '[' expr ']'
-   57    | ID •
+   36 assign_stmt: LHS • ASSIGN RHS
 
-    '('  shift, and go to state 51
-    '['  shift, and go to state 52
-
-    $default  reduce using rule 57 (arr)
+    ASSIGN  shift, and go to state 53
 
 
 State 25
 
-   23 withSemcol: BREAK •
+   23 withSemcol: return_stmt •
 
     $default  reduce using rule 23 (withSemcol)
 
 
 State 26
 
-   38 return_stmt: RETURN • expr
+   27 withSemcol: printSTMT •
 
-    SUB          shift, and go to state 36
-    INT_CONST    shift, and go to state 38
-    BOOL_CONST   shift, and go to state 39
-    FLOAT_CONST  shift, and go to state 40
-    STR_CONST    shift, and go to state 41
-    ID           shift, and go to state 24
-
-    func_call  go to state 44
-    expr       go to state 53
-    value      go to state 46
-    arr        go to state 47
-    constant   go to state 48
+    $default  reduce using rule 27 (withSemcol)
 
 
 State 27
 
-   24 withSemcol: CONTINUE •
+   24 withSemcol: func_call •
 
     $default  reduce using rule 24 (withSemcol)
 
 
 State 28
 
-   16 stmt: $@1 withSemcol • ';'
+   28 withoutSemcol: loop •
 
-    ';'  shift, and go to state 54
+    $default  reduce using rule 28 (withoutSemcol)
 
 
 State 29
 
-   19 withSemcol: assign_stmt •
+   29 withoutSemcol: conditional •
 
-    $default  reduce using rule 19 (withSemcol)
+    $default  reduce using rule 29 (withoutSemcol)
 
 
 State 30
 
-   21 withSemcol: return_stmt •
+   30 DECLARATION: data_type • id_LIST
 
-    $default  reduce using rule 21 (withSemcol)
+    ID  shift, and go to state 54
+
+    id_LIST  go to state 55
+    oneID    go to state 56
 
 
 State 31
 
-   20 withSemcol: array_decl •
+   48 func_call: ID '(' • args_list ')'
 
-    $default  reduce using rule 20 (withSemcol)
+    SUB          shift, and go to state 40
+    INT_CONST    shift, and go to state 41
+    BOOL_CONST   shift, and go to state 42
+    FLOAT_CONST  shift, and go to state 43
+    STR_CONST    shift, and go to state 44
+    ID           shift, and go to state 2
+
+    $default  reduce using rule 50 (args_list)
+
+    LHS        go to state 45
+    func_call  go to state 46
+    args_list  go to state 57
+    args       go to state 58
+    expr       go to state 59
+    value      go to state 48
+    constant   go to state 49
 
 
 State 32
 
-   22 withSemcol: func_call •
+   14 arrayBRACKETS: '[' • INT_CONST ']'
 
-    $default  reduce using rule 22 (withSemcol)
+    INT_CONST  shift, and go to state 60
 
 
 State 33
 
-   18 withSemcol: param •
-   27 assign_stmt: param • assignment
-   39 array_decl: param • '[' INT_CONST ']' array_assign
+   15 arrayBRACKETS: arrayBRACKETS • '[' INT_CONST ']'
+   38 isARRAY: arrayBRACKETS •
 
-    ASSIGN  shift, and go to state 55
-    '['     shift, and go to state 56
+    '['  shift, and go to state 61
 
-    $default  reduce using rule 18 (withSemcol)
-
-    assignment  go to state 57
+    $default  reduce using rule 38 (isARRAY)
 
 
 State 34
 
-   28 assign_stmt: arr • assignment
+   37 LHS: ID isARRAY •
 
-    ASSIGN  shift, and go to state 55
-
-    assignment  go to state 58
+    $default  reduce using rule 37 (LHS)
 
 
 State 35
 
-   49 param: data_type • ID
+   59 conditional: IF '(' • conditions ')' '{' stmts_list '}' else_stmt
 
-    ID  shift, and go to state 59
+    SUB          shift, and go to state 40
+    NOT          shift, and go to state 62
+    INT_CONST    shift, and go to state 41
+    BOOL_CONST   shift, and go to state 42
+    FLOAT_CONST  shift, and go to state 43
+    STR_CONST    shift, and go to state 44
+    ID           shift, and go to state 2
+    '('          shift, and go to state 63
+
+    LHS         go to state 45
+    func_call   go to state 46
+    expr        go to state 64
+    value       go to state 48
+    conditions  go to state 65
+    boolean     go to state 66
+    constant    go to state 49
 
 
 State 36
 
-   77 constant: SUB • INT_CONST
-   81         | SUB • FLOAT_CONST
+   58 loop: LOOP '(' • conditions ')' '{' stmts_list '}'
 
-    INT_CONST    shift, and go to state 60
-    FLOAT_CONST  shift, and go to state 61
+    SUB          shift, and go to state 40
+    NOT          shift, and go to state 62
+    INT_CONST    shift, and go to state 41
+    BOOL_CONST   shift, and go to state 42
+    FLOAT_CONST  shift, and go to state 43
+    STR_CONST    shift, and go to state 44
+    ID           shift, and go to state 2
+    '('          shift, and go to state 63
+
+    LHS         go to state 45
+    func_call   go to state 46
+    expr        go to state 64
+    value       go to state 48
+    conditions  go to state 67
+    boolean     go to state 66
+    constant    go to state 49
 
 
 State 37
 
-   35 conditions: NOT • conditions
+   43 printSTMT: PRINT '(' • printables ')'
 
-    SUB          shift, and go to state 36
-    NOT          shift, and go to state 37
-    INT_CONST    shift, and go to state 38
-    BOOL_CONST   shift, and go to state 39
-    FLOAT_CONST  shift, and go to state 40
-    STR_CONST    shift, and go to state 41
-    ID           shift, and go to state 24
+    STR_CONST  shift, and go to state 68
+    ID         shift, and go to state 69
 
-    conditions  go to state 62
-    boolean     go to state 43
-    func_call   go to state 44
-    expr        go to state 45
-    value       go to state 46
-    arr         go to state 47
-    constant    go to state 48
+    LHS         go to state 70
+    printables  go to state 71
+    printable   go to state 72
 
 
 State 38
 
-   76 constant: INT_CONST •
+    7 function: FUNC function_name • '{' stmts_list '}'
 
-    $default  reduce using rule 76 (constant)
+    '{'  shift, and go to state 73
 
 
 State 39
 
-   79 constant: BOOL_CONST •
+    8 function_name: data_type • ID '(' params ')'
 
-    $default  reduce using rule 79 (constant)
+    ID  shift, and go to state 74
 
 
 State 40
 
-   80 constant: FLOAT_CONST •
+   87 constant: SUB • INT_CONST
+   91         | SUB • FLOAT_CONST
 
-    $default  reduce using rule 80 (constant)
+    INT_CONST    shift, and go to state 75
+    FLOAT_CONST  shift, and go to state 76
 
 
 State 41
 
-   78 constant: STR_CONST •
+   86 constant: INT_CONST •
 
-    $default  reduce using rule 78 (constant)
+    $default  reduce using rule 86 (constant)
 
 
 State 42
 
-   30 conditional: IF '(' conditions • ')' '{' stmts_list '}' else_stmt
+   89 constant: BOOL_CONST •
 
-    ')'  shift, and go to state 63
+    $default  reduce using rule 89 (constant)
 
 
 State 43
 
-   33 conditions: boolean •
-   34           | boolean • bi_logic_cond conditions
-   36 boolean: boolean • rel_op expr
+   90 constant: FLOAT_CONST •
 
-    AND  shift, and go to state 64
-    OR   shift, and go to state 65
-    XOR  shift, and go to state 66
-    LTE  shift, and go to state 67
-    GTE  shift, and go to state 68
-    EQ   shift, and go to state 69
-    NEQ  shift, and go to state 70
-    '<'  shift, and go to state 71
-    '>'  shift, and go to state 72
-
-    $default  reduce using rule 33 (conditions)
-
-    rel_op         go to state 73
-    bi_logic_cond  go to state 74
+    $default  reduce using rule 90 (constant)
 
 
 State 44
 
-   53 value: func_call •
+   88 constant: STR_CONST •
 
-    $default  reduce using rule 53 (value)
+    $default  reduce using rule 88 (constant)
 
 
 State 45
 
-   37 boolean: expr •
-   51 expr: expr • op value
+   57 value: LHS •
 
-    ADD  shift, and go to state 75
-    SUB  shift, and go to state 76
-    MUL  shift, and go to state 77
-    DIV  shift, and go to state 78
-
-    $default  reduce using rule 37 (boolean)
-
-    op  go to state 79
+    $default  reduce using rule 57 (value)
 
 
 State 46
 
-   52 expr: value •
-
-    $default  reduce using rule 52 (expr)
-
-
-State 47
-
-   55 value: arr •
+   55 value: func_call •
 
     $default  reduce using rule 55 (value)
 
 
+State 47
+
+   42 return_stmt: RETURN expr •
+   53 expr: expr • op value
+
+    ADD  shift, and go to state 77
+    SUB  shift, and go to state 78
+    MUL  shift, and go to state 79
+    DIV  shift, and go to state 80
+
+    $default  reduce using rule 42 (return_stmt)
+
+    op  go to state 81
+
+
 State 48
 
-   54 value: constant •
+   54 expr: value •
 
-    $default  reduce using rule 54 (value)
+    $default  reduce using rule 54 (expr)
 
 
 State 49
 
-    7 function: FUNC function_name '{' • stmts_list '}'
+   56 value: constant •
 
-    IF    shift, and go to state 2
-    LOOP  shift, and go to state 3
-
-    '}'       reduce using rule 14 (stmts_list)
-    $default  reduce using rule 15 ($@1)
-
-    stmts_list     go to state 80
-    stmt           go to state 81
-    $@1            go to state 10
-    withoutSemcol  go to state 11
-    loop           go to state 12
-    conditional    go to state 13
+    $default  reduce using rule 56 (value)
 
 
 State 50
 
-    8 function_name: data_type ID • '(' params ')'
+    0 $accept: program $end •
 
-    '('  shift, and go to state 82
+    $default  accept
 
 
 State 51
 
-   40 func_call: ID '(' • args_list ')'
+    3 items_list: item items_list •
 
-    SUB          shift, and go to state 36
-    INT_CONST    shift, and go to state 38
-    BOOL_CONST   shift, and go to state 39
-    FLOAT_CONST  shift, and go to state 40
-    STR_CONST    shift, and go to state 41
-    ID           shift, and go to state 24
-
-    $default  reduce using rule 42 (args_list)
-
-    func_call  go to state 44
-    args_list  go to state 83
-    args       go to state 84
-    expr       go to state 85
-    value      go to state 46
-    arr        go to state 47
-    constant   go to state 48
+    $default  reduce using rule 3 (items_list)
 
 
 State 52
 
-   56 arr: ID '[' • expr ']'
+   19 stmt: withSemcol ';' •
 
-    SUB          shift, and go to state 36
-    INT_CONST    shift, and go to state 38
-    BOOL_CONST   shift, and go to state 39
-    FLOAT_CONST  shift, and go to state 40
-    STR_CONST    shift, and go to state 41
-    ID           shift, and go to state 24
-
-    func_call  go to state 44
-    expr       go to state 86
-    value      go to state 46
-    arr        go to state 47
-    constant   go to state 48
+    $default  reduce using rule 19 (stmt)
 
 
 State 53
 
-   38 return_stmt: RETURN expr •
-   51 expr: expr • op value
+   36 assign_stmt: LHS ASSIGN • RHS
 
-    ADD  shift, and go to state 75
-    SUB  shift, and go to state 76
-    MUL  shift, and go to state 77
-    DIV  shift, and go to state 78
+    SUB          shift, and go to state 40
+    INT_CONST    shift, and go to state 41
+    BOOL_CONST   shift, and go to state 42
+    FLOAT_CONST  shift, and go to state 43
+    STR_CONST    shift, and go to state 44
+    ID           shift, and go to state 2
+    SCAN         shift, and go to state 82
 
-    $default  reduce using rule 38 (return_stmt)
-
-    op  go to state 79
+    LHS        go to state 45
+    RHS        go to state 83
+    func_call  go to state 46
+    expr       go to state 84
+    value      go to state 48
+    constant   go to state 49
 
 
 State 54
 
-   16 stmt: $@1 withSemcol ';' •
+   33 oneID: ID • opt_assign
 
-    $default  reduce using rule 16 (stmt)
+    ASSIGN  shift, and go to state 85
+
+    $default  reduce using rule 35 (opt_assign)
+
+    opt_assign  go to state 86
 
 
 State 55
 
-   50 assignment: ASSIGN • expr
+   30 DECLARATION: data_type id_LIST •
 
-    SUB          shift, and go to state 36
-    INT_CONST    shift, and go to state 38
-    BOOL_CONST   shift, and go to state 39
-    FLOAT_CONST  shift, and go to state 40
-    STR_CONST    shift, and go to state 41
-    ID           shift, and go to state 24
-
-    func_call  go to state 44
-    expr       go to state 87
-    value      go to state 46
-    arr        go to state 47
-    constant   go to state 48
+    $default  reduce using rule 30 (DECLARATION)
 
 
 State 56
 
-   39 array_decl: param '[' • INT_CONST ']' array_assign
+   31 id_LIST: oneID • ',' id_LIST
+   32        | oneID •
 
-    INT_CONST  shift, and go to state 88
+    ','  shift, and go to state 87
+
+    $default  reduce using rule 32 (id_LIST)
 
 
 State 57
 
-   27 assign_stmt: param assignment •
+   48 func_call: ID '(' args_list • ')'
 
-    $default  reduce using rule 27 (assign_stmt)
+    ')'  shift, and go to state 88
 
 
 State 58
 
-   28 assign_stmt: arr assignment •
+   49 args_list: args •
+   51 args: args • ',' expr
 
-    $default  reduce using rule 28 (assign_stmt)
+    ','  shift, and go to state 89
+
+    $default  reduce using rule 49 (args_list)
 
 
 State 59
 
-   49 param: data_type ID •
+   52 args: expr •
+   53 expr: expr • op value
 
-    $default  reduce using rule 49 (param)
+    ADD  shift, and go to state 77
+    SUB  shift, and go to state 78
+    MUL  shift, and go to state 79
+    DIV  shift, and go to state 80
+
+    $default  reduce using rule 52 (args)
+
+    op  go to state 81
 
 
 State 60
 
-   77 constant: SUB INT_CONST •
+   14 arrayBRACKETS: '[' INT_CONST • ']'
 
-    $default  reduce using rule 77 (constant)
+    ']'  shift, and go to state 90
 
 
 State 61
 
-   81 constant: SUB FLOAT_CONST •
+   15 arrayBRACKETS: arrayBRACKETS '[' • INT_CONST ']'
 
-    $default  reduce using rule 81 (constant)
+    INT_CONST  shift, and go to state 91
 
 
 State 62
 
-   35 conditions: NOT conditions •
+   64 conditions: NOT • conditions
 
-    $default  reduce using rule 35 (conditions)
+    SUB          shift, and go to state 40
+    NOT          shift, and go to state 62
+    INT_CONST    shift, and go to state 41
+    BOOL_CONST   shift, and go to state 42
+    FLOAT_CONST  shift, and go to state 43
+    STR_CONST    shift, and go to state 44
+    ID           shift, and go to state 2
+    '('          shift, and go to state 63
+
+    LHS         go to state 45
+    func_call   go to state 46
+    expr        go to state 64
+    value       go to state 48
+    conditions  go to state 92
+    boolean     go to state 66
+    constant    go to state 49
 
 
 State 63
 
-   30 conditional: IF '(' conditions ')' • '{' stmts_list '}' else_stmt
+   65 conditions: '(' • conditions ')'
 
-    '{'  shift, and go to state 89
+    SUB          shift, and go to state 40
+    NOT          shift, and go to state 62
+    INT_CONST    shift, and go to state 41
+    BOOL_CONST   shift, and go to state 42
+    FLOAT_CONST  shift, and go to state 43
+    STR_CONST    shift, and go to state 44
+    ID           shift, and go to state 2
+    '('          shift, and go to state 63
+
+    LHS         go to state 45
+    func_call   go to state 46
+    expr        go to state 64
+    value       go to state 48
+    conditions  go to state 93
+    boolean     go to state 66
+    constant    go to state 49
 
 
 State 64
 
-   73 bi_logic_cond: AND •
+   53 expr: expr • op value
+   67 boolean: expr •
 
-    $default  reduce using rule 73 (bi_logic_cond)
+    ADD  shift, and go to state 77
+    SUB  shift, and go to state 78
+    MUL  shift, and go to state 79
+    DIV  shift, and go to state 80
+
+    $default  reduce using rule 67 (boolean)
+
+    op  go to state 81
 
 
 State 65
 
-   74 bi_logic_cond: OR •
+   59 conditional: IF '(' conditions • ')' '{' stmts_list '}' else_stmt
 
-    $default  reduce using rule 74 (bi_logic_cond)
+    ')'  shift, and go to state 94
 
 
 State 66
 
-   75 bi_logic_cond: XOR •
+   62 conditions: boolean •
+   63           | boolean • bi_logic_OP conditions
+   66 boolean: boolean • rel_op expr
 
-    $default  reduce using rule 75 (bi_logic_cond)
+    AND  shift, and go to state 95
+    OR   shift, and go to state 96
+    XOR  shift, and go to state 97
+    LTE  shift, and go to state 98
+    GTE  shift, and go to state 99
+    EQ   shift, and go to state 100
+    NEQ  shift, and go to state 101
+    '<'  shift, and go to state 102
+    '>'  shift, and go to state 103
+
+    $default  reduce using rule 62 (conditions)
+
+    rel_op       go to state 104
+    bi_logic_OP  go to state 105
 
 
 State 67
 
-   67 rel_op: LTE •
+   58 loop: LOOP '(' conditions • ')' '{' stmts_list '}'
 
-    $default  reduce using rule 67 (rel_op)
+    ')'  shift, and go to state 106
 
 
 State 68
 
-   68 rel_op: GTE •
+   46 printable: STR_CONST •
 
-    $default  reduce using rule 68 (rel_op)
+    $default  reduce using rule 46 (printable)
 
 
 State 69
 
-   71 rel_op: EQ •
+   37 LHS: ID • isARRAY
 
-    $default  reduce using rule 71 (rel_op)
+    '['  shift, and go to state 32
+
+    ')'       reduce using rule 16 (arrayBRACKETS)
+    ')'       [reduce using rule 39 (isARRAY)]
+    '['       [reduce using rule 16 (arrayBRACKETS)]
+    '+'       reduce using rule 16 (arrayBRACKETS)
+    '+'       [reduce using rule 39 (isARRAY)]
+    $default  reduce using rule 16 (arrayBRACKETS)
+
+    arrayBRACKETS  go to state 33
+    isARRAY        go to state 34
+
+    shift/reduce conflict on token '[':
+       16 arrayBRACKETS: • %empty
+       14 arrayBRACKETS: • '[' INT_CONST ']'
+      First example: PRINT '(' ID • '[' INT_CONST ']' ')' ';' items_list $end
+      Shift derivation
+        $accept
+        ↳ program                                                                 $end
+          ↳ items_list
+            ↳ item                                                     items_list
+              ↳ stmt
+                ↳ withSemcol                                       ';'
+                  ↳ printSTMT
+                    ↳ PRINT '(' printables                     ')'
+                                ↳ LHS
+                                  ↳ ID isARRAY
+                                       ↳ arrayBRACKETS
+                                         ↳ • '[' INT_CONST ']'
+      Second example: PRINT '(' ID • '[' INT_CONST ']' ')' ';' items_list $end
+      Reduce derivation
+        $accept
+        ↳ program                                                                               $end
+          ↳ items_list
+            ↳ item                                                                   items_list
+              ↳ stmt
+                ↳ withSemcol                                                     ';'
+                  ↳ printSTMT
+                    ↳ PRINT '(' printables                                   ')'
+                                ↳ printable
+                                  ↳ LHS
+                                    ↳ ID isARRAY
+                                         ↳ arrayBRACKETS
+                                           ↳ arrayBRACKETS '[' INT_CONST ']'
+                                             ↳ •
+
+    reduce/reduce conflict on tokens ')', '+':
+       16 arrayBRACKETS: • %empty
+       39 isARRAY: • %empty
+      Example: •
+      First reduce derivation
+        isARRAY
+        ↳ arrayBRACKETS
+          ↳ •
+      Second reduce derivation
+        isARRAY
+        ↳ •
+
 
 
 State 70
 
-   72 rel_op: NEQ •
+   47 printable: LHS •
 
-    $default  reduce using rule 72 (rel_op)
+    $default  reduce using rule 47 (printable)
 
 
 State 71
 
-   69 rel_op: '<' •
+   43 printSTMT: PRINT '(' printables • ')'
+   44 printables: printables • '+' printable
 
-    $default  reduce using rule 69 (rel_op)
+    ')'  shift, and go to state 107
+    '+'  shift, and go to state 108
 
 
 State 72
 
-   70 rel_op: '>' •
+   45 printables: printable •
 
-    $default  reduce using rule 70 (rel_op)
+    $default  reduce using rule 45 (printables)
 
 
 State 73
 
-   36 boolean: boolean rel_op • expr
+    7 function: FUNC function_name '{' • stmts_list '}'
 
-    SUB          shift, and go to state 36
-    INT_CONST    shift, and go to state 38
-    BOOL_CONST   shift, and go to state 39
-    FLOAT_CONST  shift, and go to state 40
-    STR_CONST    shift, and go to state 41
-    ID           shift, and go to state 24
+    ID        shift, and go to state 2
+    IF        shift, and go to state 3
+    LOOP      shift, and go to state 4
+    VOID      shift, and go to state 5
+    INT       shift, and go to state 6
+    DOUBLE    shift, and go to state 7
+    BOOLEAN   shift, and go to state 8
+    CHAR      shift, and go to state 9
+    BREAK     shift, and go to state 10
+    PRINT     shift, and go to state 11
+    RETURN    shift, and go to state 13
+    CONTINUE  shift, and go to state 14
 
-    func_call  go to state 44
-    expr       go to state 90
-    value      go to state 46
-    arr        go to state 47
-    constant   go to state 48
+    $default  reduce using rule 18 (stmts_list)
+
+    stmts_list     go to state 109
+    stmt           go to state 110
+    withSemcol     go to state 20
+    withoutSemcol  go to state 21
+    DECLARATION    go to state 22
+    assign_stmt    go to state 23
+    LHS            go to state 24
+    return_stmt    go to state 25
+    printSTMT      go to state 26
+    func_call      go to state 27
+    loop           go to state 28
+    conditional    go to state 29
+    data_type      go to state 30
 
 
 State 74
 
-   34 conditions: boolean bi_logic_cond • conditions
+    8 function_name: data_type ID • '(' params ')'
 
-    SUB          shift, and go to state 36
-    NOT          shift, and go to state 37
-    INT_CONST    shift, and go to state 38
-    BOOL_CONST   shift, and go to state 39
-    FLOAT_CONST  shift, and go to state 40
-    STR_CONST    shift, and go to state 41
-    ID           shift, and go to state 24
-
-    conditions  go to state 91
-    boolean     go to state 43
-    func_call   go to state 44
-    expr        go to state 45
-    value       go to state 46
-    arr         go to state 47
-    constant    go to state 48
+    '('  shift, and go to state 111
 
 
 State 75
 
-   63 op: ADD •
+   87 constant: SUB INT_CONST •
 
-    $default  reduce using rule 63 (op)
+    $default  reduce using rule 87 (constant)
 
 
 State 76
 
-   64 op: SUB •
+   91 constant: SUB FLOAT_CONST •
 
-    $default  reduce using rule 64 (op)
+    $default  reduce using rule 91 (constant)
 
 
 State 77
 
-   65 op: MUL •
+   73 op: ADD •
 
-    $default  reduce using rule 65 (op)
+    $default  reduce using rule 73 (op)
 
 
 State 78
 
-   66 op: DIV •
+   74 op: SUB •
 
-    $default  reduce using rule 66 (op)
+    $default  reduce using rule 74 (op)
 
 
 State 79
 
-   51 expr: expr op • value
+   75 op: MUL •
 
-    SUB          shift, and go to state 36
-    INT_CONST    shift, and go to state 38
-    BOOL_CONST   shift, and go to state 39
-    FLOAT_CONST  shift, and go to state 40
-    STR_CONST    shift, and go to state 41
-    ID           shift, and go to state 24
-
-    func_call  go to state 44
-    value      go to state 92
-    arr        go to state 47
-    constant   go to state 48
+    $default  reduce using rule 75 (op)
 
 
 State 80
 
-    7 function: FUNC function_name '{' stmts_list • '}'
+   76 op: DIV •
 
-    '}'  shift, and go to state 93
+    $default  reduce using rule 76 (op)
 
 
 State 81
 
-   13 stmts_list: stmt • stmts_list
+   53 expr: expr op • value
 
-    IF    shift, and go to state 2
-    LOOP  shift, and go to state 3
+    SUB          shift, and go to state 40
+    INT_CONST    shift, and go to state 41
+    BOOL_CONST   shift, and go to state 42
+    FLOAT_CONST  shift, and go to state 43
+    STR_CONST    shift, and go to state 44
+    ID           shift, and go to state 2
 
-    '}'       reduce using rule 14 (stmts_list)
-    $default  reduce using rule 15 ($@1)
-
-    stmts_list     go to state 94
-    stmt           go to state 81
-    $@1            go to state 10
-    withoutSemcol  go to state 11
-    loop           go to state 12
-    conditional    go to state 13
+    LHS        go to state 45
+    func_call  go to state 46
+    value      go to state 112
+    constant   go to state 49
 
 
 State 82
 
-    8 function_name: data_type ID '(' • params ')'
+   41 RHS: SCAN • '(' data_type ')'
 
-    VOID     shift, and go to state 15
-    INT      shift, and go to state 16
-    DOUBLE   shift, and go to state 17
-    BOOLEAN  shift, and go to state 18
-    CHAR     shift, and go to state 19
-
-    $default  reduce using rule 10 (params)
-
-    params      go to state 95
-    param_list  go to state 96
-    param       go to state 97
-    data_type   go to state 35
+    '('  shift, and go to state 113
 
 
 State 83
 
-   40 func_call: ID '(' args_list • ')'
+   36 assign_stmt: LHS ASSIGN RHS •
 
-    ')'  shift, and go to state 98
+    $default  reduce using rule 36 (assign_stmt)
 
 
 State 84
 
-   41 args_list: args •
-   43 args: args • ',' expr
+   40 RHS: expr •
+   53 expr: expr • op value
 
-    ','  shift, and go to state 99
+    ADD  shift, and go to state 77
+    SUB  shift, and go to state 78
+    MUL  shift, and go to state 79
+    DIV  shift, and go to state 80
 
-    $default  reduce using rule 41 (args_list)
+    $default  reduce using rule 40 (RHS)
+
+    op  go to state 81
 
 
 State 85
 
-   44 args: expr •
-   51 expr: expr • op value
+   34 opt_assign: ASSIGN • expr
 
-    ADD  shift, and go to state 75
-    SUB  shift, and go to state 76
-    MUL  shift, and go to state 77
-    DIV  shift, and go to state 78
+    SUB          shift, and go to state 40
+    INT_CONST    shift, and go to state 41
+    BOOL_CONST   shift, and go to state 42
+    FLOAT_CONST  shift, and go to state 43
+    STR_CONST    shift, and go to state 44
+    ID           shift, and go to state 2
 
-    $default  reduce using rule 44 (args)
-
-    op  go to state 79
+    LHS        go to state 45
+    func_call  go to state 46
+    expr       go to state 114
+    value      go to state 48
+    constant   go to state 49
 
 
 State 86
 
-   51 expr: expr • op value
-   56 arr: ID '[' expr • ']'
+   33 oneID: ID opt_assign •
 
-    ADD  shift, and go to state 75
-    SUB  shift, and go to state 76
-    MUL  shift, and go to state 77
-    DIV  shift, and go to state 78
-    ']'  shift, and go to state 100
-
-    op  go to state 79
+    $default  reduce using rule 33 (oneID)
 
 
 State 87
 
-   50 assignment: ASSIGN expr •
-   51 expr: expr • op value
+   31 id_LIST: oneID ',' • id_LIST
 
-    ADD  shift, and go to state 75
-    SUB  shift, and go to state 76
-    MUL  shift, and go to state 77
-    DIV  shift, and go to state 78
+    ID  shift, and go to state 54
 
-    $default  reduce using rule 50 (assignment)
-
-    op  go to state 79
+    id_LIST  go to state 115
+    oneID    go to state 56
 
 
 State 88
 
-   39 array_decl: param '[' INT_CONST • ']' array_assign
+   48 func_call: ID '(' args_list ')' •
 
-    ']'  shift, and go to state 101
+    $default  reduce using rule 48 (func_call)
 
 
 State 89
 
-   30 conditional: IF '(' conditions ')' '{' • stmts_list '}' else_stmt
+   51 args: args ',' • expr
 
-    IF    shift, and go to state 2
-    LOOP  shift, and go to state 3
+    SUB          shift, and go to state 40
+    INT_CONST    shift, and go to state 41
+    BOOL_CONST   shift, and go to state 42
+    FLOAT_CONST  shift, and go to state 43
+    STR_CONST    shift, and go to state 44
+    ID           shift, and go to state 2
 
-    '}'       reduce using rule 14 (stmts_list)
-    $default  reduce using rule 15 ($@1)
-
-    stmts_list     go to state 102
-    stmt           go to state 81
-    $@1            go to state 10
-    withoutSemcol  go to state 11
-    loop           go to state 12
-    conditional    go to state 13
+    LHS        go to state 45
+    func_call  go to state 46
+    expr       go to state 116
+    value      go to state 48
+    constant   go to state 49
 
 
 State 90
 
-   36 boolean: boolean rel_op expr •
-   51 expr: expr • op value
+   14 arrayBRACKETS: '[' INT_CONST ']' •
 
-    ADD  shift, and go to state 75
-    SUB  shift, and go to state 76
-    MUL  shift, and go to state 77
-    DIV  shift, and go to state 78
-
-    $default  reduce using rule 36 (boolean)
-
-    op  go to state 79
+    $default  reduce using rule 14 (arrayBRACKETS)
 
 
 State 91
 
-   34 conditions: boolean bi_logic_cond conditions •
+   15 arrayBRACKETS: arrayBRACKETS '[' INT_CONST • ']'
 
-    $default  reduce using rule 34 (conditions)
+    ']'  shift, and go to state 117
 
 
 State 92
 
-   51 expr: expr op value •
+   64 conditions: NOT conditions •
 
-    $default  reduce using rule 51 (expr)
+    $default  reduce using rule 64 (conditions)
 
 
 State 93
+
+   65 conditions: '(' conditions • ')'
+
+    ')'  shift, and go to state 118
+
+
+State 94
+
+   59 conditional: IF '(' conditions ')' • '{' stmts_list '}' else_stmt
+
+    '{'  shift, and go to state 119
+
+
+State 95
+
+   83 bi_logic_OP: AND •
+
+    $default  reduce using rule 83 (bi_logic_OP)
+
+
+State 96
+
+   84 bi_logic_OP: OR •
+
+    $default  reduce using rule 84 (bi_logic_OP)
+
+
+State 97
+
+   85 bi_logic_OP: XOR •
+
+    $default  reduce using rule 85 (bi_logic_OP)
+
+
+State 98
+
+   77 rel_op: LTE •
+
+    $default  reduce using rule 77 (rel_op)
+
+
+State 99
+
+   78 rel_op: GTE •
+
+    $default  reduce using rule 78 (rel_op)
+
+
+State 100
+
+   81 rel_op: EQ •
+
+    $default  reduce using rule 81 (rel_op)
+
+
+State 101
+
+   82 rel_op: NEQ •
+
+    $default  reduce using rule 82 (rel_op)
+
+
+State 102
+
+   79 rel_op: '<' •
+
+    $default  reduce using rule 79 (rel_op)
+
+
+State 103
+
+   80 rel_op: '>' •
+
+    $default  reduce using rule 80 (rel_op)
+
+
+State 104
+
+   66 boolean: boolean rel_op • expr
+
+    SUB          shift, and go to state 40
+    INT_CONST    shift, and go to state 41
+    BOOL_CONST   shift, and go to state 42
+    FLOAT_CONST  shift, and go to state 43
+    STR_CONST    shift, and go to state 44
+    ID           shift, and go to state 2
+
+    LHS        go to state 45
+    func_call  go to state 46
+    expr       go to state 120
+    value      go to state 48
+    constant   go to state 49
+
+
+State 105
+
+   63 conditions: boolean bi_logic_OP • conditions
+
+    SUB          shift, and go to state 40
+    NOT          shift, and go to state 62
+    INT_CONST    shift, and go to state 41
+    BOOL_CONST   shift, and go to state 42
+    FLOAT_CONST  shift, and go to state 43
+    STR_CONST    shift, and go to state 44
+    ID           shift, and go to state 2
+    '('          shift, and go to state 63
+
+    LHS         go to state 45
+    func_call   go to state 46
+    expr        go to state 64
+    value       go to state 48
+    conditions  go to state 121
+    boolean     go to state 66
+    constant    go to state 49
+
+
+State 106
+
+   58 loop: LOOP '(' conditions ')' • '{' stmts_list '}'
+
+    '{'  shift, and go to state 122
+
+
+State 107
+
+   43 printSTMT: PRINT '(' printables ')' •
+
+    $default  reduce using rule 43 (printSTMT)
+
+
+State 108
+
+   44 printables: printables '+' • printable
+
+    STR_CONST  shift, and go to state 68
+    ID         shift, and go to state 69
+
+    LHS        go to state 70
+    printable  go to state 123
+
+
+State 109
+
+    7 function: FUNC function_name '{' stmts_list • '}'
+
+    '}'  shift, and go to state 124
+
+
+State 110
+
+   17 stmts_list: stmt • stmts_list
+
+    ID        shift, and go to state 2
+    IF        shift, and go to state 3
+    LOOP      shift, and go to state 4
+    VOID      shift, and go to state 5
+    INT       shift, and go to state 6
+    DOUBLE    shift, and go to state 7
+    BOOLEAN   shift, and go to state 8
+    CHAR      shift, and go to state 9
+    BREAK     shift, and go to state 10
+    PRINT     shift, and go to state 11
+    RETURN    shift, and go to state 13
+    CONTINUE  shift, and go to state 14
+
+    $default  reduce using rule 18 (stmts_list)
+
+    stmts_list     go to state 125
+    stmt           go to state 110
+    withSemcol     go to state 20
+    withoutSemcol  go to state 21
+    DECLARATION    go to state 22
+    assign_stmt    go to state 23
+    LHS            go to state 24
+    return_stmt    go to state 25
+    printSTMT      go to state 26
+    func_call      go to state 27
+    loop           go to state 28
+    conditional    go to state 29
+    data_type      go to state 30
+
+
+State 111
+
+    8 function_name: data_type ID '(' • params ')'
+
+    VOID     shift, and go to state 5
+    INT      shift, and go to state 6
+    DOUBLE   shift, and go to state 7
+    BOOLEAN  shift, and go to state 8
+    CHAR     shift, and go to state 9
+
+    $default  reduce using rule 10 (params)
+
+    params      go to state 126
+    param_list  go to state 127
+    param       go to state 128
+    data_type   go to state 129
+
+
+State 112
+
+   53 expr: expr op value •
+
+    $default  reduce using rule 53 (expr)
+
+
+State 113
+
+   41 RHS: SCAN '(' • data_type ')'
+
+    VOID     shift, and go to state 5
+    INT      shift, and go to state 6
+    DOUBLE   shift, and go to state 7
+    BOOLEAN  shift, and go to state 8
+    CHAR     shift, and go to state 9
+
+    data_type  go to state 130
+
+
+State 114
+
+   34 opt_assign: ASSIGN expr •
+   53 expr: expr • op value
+
+    ADD  shift, and go to state 77
+    SUB  shift, and go to state 78
+    MUL  shift, and go to state 79
+    DIV  shift, and go to state 80
+
+    $default  reduce using rule 34 (opt_assign)
+
+    op  go to state 81
+
+
+State 115
+
+   31 id_LIST: oneID ',' id_LIST •
+
+    $default  reduce using rule 31 (id_LIST)
+
+
+State 116
+
+   51 args: args ',' expr •
+   53 expr: expr • op value
+
+    ADD  shift, and go to state 77
+    SUB  shift, and go to state 78
+    MUL  shift, and go to state 79
+    DIV  shift, and go to state 80
+
+    $default  reduce using rule 51 (args)
+
+    op  go to state 81
+
+
+State 117
+
+   15 arrayBRACKETS: arrayBRACKETS '[' INT_CONST ']' •
+
+    $default  reduce using rule 15 (arrayBRACKETS)
+
+
+State 118
+
+   65 conditions: '(' conditions ')' •
+
+    $default  reduce using rule 65 (conditions)
+
+
+State 119
+
+   59 conditional: IF '(' conditions ')' '{' • stmts_list '}' else_stmt
+
+    ID        shift, and go to state 2
+    IF        shift, and go to state 3
+    LOOP      shift, and go to state 4
+    VOID      shift, and go to state 5
+    INT       shift, and go to state 6
+    DOUBLE    shift, and go to state 7
+    BOOLEAN   shift, and go to state 8
+    CHAR      shift, and go to state 9
+    BREAK     shift, and go to state 10
+    PRINT     shift, and go to state 11
+    RETURN    shift, and go to state 13
+    CONTINUE  shift, and go to state 14
+
+    $default  reduce using rule 18 (stmts_list)
+
+    stmts_list     go to state 131
+    stmt           go to state 110
+    withSemcol     go to state 20
+    withoutSemcol  go to state 21
+    DECLARATION    go to state 22
+    assign_stmt    go to state 23
+    LHS            go to state 24
+    return_stmt    go to state 25
+    printSTMT      go to state 26
+    func_call      go to state 27
+    loop           go to state 28
+    conditional    go to state 29
+    data_type      go to state 30
+
+
+State 120
+
+   53 expr: expr • op value
+   66 boolean: boolean rel_op expr •
+
+    ADD  shift, and go to state 77
+    SUB  shift, and go to state 78
+    MUL  shift, and go to state 79
+    DIV  shift, and go to state 80
+
+    $default  reduce using rule 66 (boolean)
+
+    op  go to state 81
+
+
+State 121
+
+   63 conditions: boolean bi_logic_OP conditions •
+
+    $default  reduce using rule 63 (conditions)
+
+
+State 122
+
+   58 loop: LOOP '(' conditions ')' '{' • stmts_list '}'
+
+    ID        shift, and go to state 2
+    IF        shift, and go to state 3
+    LOOP      shift, and go to state 4
+    VOID      shift, and go to state 5
+    INT       shift, and go to state 6
+    DOUBLE    shift, and go to state 7
+    BOOLEAN   shift, and go to state 8
+    CHAR      shift, and go to state 9
+    BREAK     shift, and go to state 10
+    PRINT     shift, and go to state 11
+    RETURN    shift, and go to state 13
+    CONTINUE  shift, and go to state 14
+
+    $default  reduce using rule 18 (stmts_list)
+
+    stmts_list     go to state 132
+    stmt           go to state 110
+    withSemcol     go to state 20
+    withoutSemcol  go to state 21
+    DECLARATION    go to state 22
+    assign_stmt    go to state 23
+    LHS            go to state 24
+    return_stmt    go to state 25
+    printSTMT      go to state 26
+    func_call      go to state 27
+    loop           go to state 28
+    conditional    go to state 29
+    data_type      go to state 30
+
+
+State 123
+
+   44 printables: printables '+' printable •
+
+    $default  reduce using rule 44 (printables)
+
+
+State 124
 
     7 function: FUNC function_name '{' stmts_list '}' •
 
     $default  reduce using rule 7 (function)
 
 
-State 94
+State 125
 
-   13 stmts_list: stmt stmts_list •
+   17 stmts_list: stmt stmts_list •
 
-    $default  reduce using rule 13 (stmts_list)
+    $default  reduce using rule 17 (stmts_list)
 
 
-State 95
+State 126
 
     8 function_name: data_type ID '(' params • ')'
 
-    ')'  shift, and go to state 103
+    ')'  shift, and go to state 133
 
 
-State 96
+State 127
 
     9 params: param_list •
    11 param_list: param_list • ',' param
 
-    ','  shift, and go to state 104
+    ','  shift, and go to state 134
 
     $default  reduce using rule 9 (params)
 
 
-State 97
+State 128
 
    12 param_list: param •
 
     $default  reduce using rule 12 (param_list)
 
 
-State 98
+State 129
 
-   40 func_call: ID '(' args_list ')' •
+   13 param: data_type • ID arrayBRACKETS
 
-    $default  reduce using rule 40 (func_call)
-
-
-State 99
-
-   43 args: args ',' • expr
-
-    SUB          shift, and go to state 36
-    INT_CONST    shift, and go to state 38
-    BOOL_CONST   shift, and go to state 39
-    FLOAT_CONST  shift, and go to state 40
-    STR_CONST    shift, and go to state 41
-    ID           shift, and go to state 24
-
-    func_call  go to state 44
-    expr       go to state 105
-    value      go to state 46
-    arr        go to state 47
-    constant   go to state 48
+    ID  shift, and go to state 135
 
 
-State 100
+State 130
 
-   56 arr: ID '[' expr ']' •
+   41 RHS: SCAN '(' data_type • ')'
 
-    $default  reduce using rule 56 (arr)
-
-
-State 101
-
-   39 array_decl: param '[' INT_CONST ']' • array_assign
-
-    ASSIGN  shift, and go to state 106
-
-    $default  reduce using rule 46 (array_assign)
-
-    array_assign  go to state 107
+    ')'  shift, and go to state 136
 
 
-State 102
+State 131
 
-   30 conditional: IF '(' conditions ')' '{' stmts_list • '}' else_stmt
+   59 conditional: IF '(' conditions ')' '{' stmts_list • '}' else_stmt
 
-    '}'  shift, and go to state 108
+    '}'  shift, and go to state 137
 
 
-State 103
+State 132
+
+   58 loop: LOOP '(' conditions ')' '{' stmts_list • '}'
+
+    '}'  shift, and go to state 138
+
+
+State 133
 
     8 function_name: data_type ID '(' params ')' •
 
     $default  reduce using rule 8 (function_name)
 
 
-State 104
+State 134
 
    11 param_list: param_list ',' • param
 
-    VOID     shift, and go to state 15
-    INT      shift, and go to state 16
-    DOUBLE   shift, and go to state 17
-    BOOLEAN  shift, and go to state 18
-    CHAR     shift, and go to state 19
+    VOID     shift, and go to state 5
+    INT      shift, and go to state 6
+    DOUBLE   shift, and go to state 7
+    BOOLEAN  shift, and go to state 8
+    CHAR     shift, and go to state 9
 
-    param      go to state 109
-    data_type  go to state 35
-
-
-State 105
-
-   43 args: args ',' expr •
-   51 expr: expr • op value
-
-    ADD  shift, and go to state 75
-    SUB  shift, and go to state 76
-    MUL  shift, and go to state 77
-    DIV  shift, and go to state 78
-
-    $default  reduce using rule 43 (args)
-
-    op  go to state 79
+    param      go to state 139
+    data_type  go to state 129
 
 
-State 106
+State 135
 
-   45 array_assign: ASSIGN • '[' id_list ']'
+   13 param: data_type ID • arrayBRACKETS
 
-    '['  shift, and go to state 110
+    '['  shift, and go to state 32
+
+    '['       [reduce using rule 16 (arrayBRACKETS)]
+    $default  reduce using rule 16 (arrayBRACKETS)
+
+    arrayBRACKETS  go to state 140
+
+    shift/reduce conflict on token '[':
+       16 arrayBRACKETS: • %empty
+       14 arrayBRACKETS: • '[' INT_CONST ']'
+      Example: • '[' INT_CONST ']'
+      Shift derivation
+        arrayBRACKETS
+        ↳ • '[' INT_CONST ']'
+      Reduce derivation
+        arrayBRACKETS
+        ↳ arrayBRACKETS '[' INT_CONST ']'
+          ↳ •
 
 
-State 107
 
-   39 array_decl: param '[' INT_CONST ']' array_assign •
+State 136
 
-    $default  reduce using rule 39 (array_decl)
+   41 RHS: SCAN '(' data_type ')' •
 
-
-State 108
-
-   30 conditional: IF '(' conditions ')' '{' stmts_list '}' • else_stmt
-
-    ELSE  shift, and go to state 111
-
-    $default  reduce using rule 32 (else_stmt)
-
-    else_stmt  go to state 112
+    $default  reduce using rule 41 (RHS)
 
 
-State 109
+State 137
+
+   59 conditional: IF '(' conditions ')' '{' stmts_list '}' • else_stmt
+
+    ELSE  shift, and go to state 141
+
+    $default  reduce using rule 61 (else_stmt)
+
+    else_stmt  go to state 142
+
+
+State 138
+
+   58 loop: LOOP '(' conditions ')' '{' stmts_list '}' •
+
+    $default  reduce using rule 58 (loop)
+
+
+State 139
 
    11 param_list: param_list ',' param •
 
     $default  reduce using rule 11 (param_list)
 
 
-State 110
+State 140
 
-   45 array_assign: ASSIGN '[' • id_list ']'
+   13 param: data_type ID arrayBRACKETS •
+   15 arrayBRACKETS: arrayBRACKETS • '[' INT_CONST ']'
 
-    SUB          shift, and go to state 36
-    INT_CONST    shift, and go to state 38
-    BOOL_CONST   shift, and go to state 39
-    FLOAT_CONST  shift, and go to state 40
-    STR_CONST    shift, and go to state 41
+    '['  shift, and go to state 61
 
-    id_list   go to state 113
-    constant  go to state 114
+    $default  reduce using rule 13 (param)
 
 
-State 111
+State 141
 
-   31 else_stmt: ELSE • '{' stmts_list '}'
+   60 else_stmt: ELSE • '{' stmts_list '}'
 
-    '{'  shift, and go to state 115
-
-
-State 112
-
-   30 conditional: IF '(' conditions ')' '{' stmts_list '}' else_stmt •
-
-    $default  reduce using rule 30 (conditional)
+    '{'  shift, and go to state 143
 
 
-State 113
+State 142
 
-   45 array_assign: ASSIGN '[' id_list • ']'
-   47 id_list: id_list • ',' constant
+   59 conditional: IF '(' conditions ')' '{' stmts_list '}' else_stmt •
 
-    ']'  shift, and go to state 116
-    ','  shift, and go to state 117
+    $default  reduce using rule 59 (conditional)
 
 
-State 114
+State 143
 
-   48 id_list: constant •
+   60 else_stmt: ELSE '{' • stmts_list '}'
 
-    $default  reduce using rule 48 (id_list)
+    ID        shift, and go to state 2
+    IF        shift, and go to state 3
+    LOOP      shift, and go to state 4
+    VOID      shift, and go to state 5
+    INT       shift, and go to state 6
+    DOUBLE    shift, and go to state 7
+    BOOLEAN   shift, and go to state 8
+    CHAR      shift, and go to state 9
+    BREAK     shift, and go to state 10
+    PRINT     shift, and go to state 11
+    RETURN    shift, and go to state 13
+    CONTINUE  shift, and go to state 14
 
+    $default  reduce using rule 18 (stmts_list)
 
-State 115
-
-   31 else_stmt: ELSE '{' • stmts_list '}'
-
-    IF    shift, and go to state 2
-    LOOP  shift, and go to state 3
-
-    '}'       reduce using rule 14 (stmts_list)
-    $default  reduce using rule 15 ($@1)
-
-    stmts_list     go to state 118
-    stmt           go to state 81
-    $@1            go to state 10
-    withoutSemcol  go to state 11
-    loop           go to state 12
-    conditional    go to state 13
-
-
-State 116
-
-   45 array_assign: ASSIGN '[' id_list ']' •
-
-    $default  reduce using rule 45 (array_assign)
-
-
-State 117
-
-   47 id_list: id_list ',' • constant
-
-    SUB          shift, and go to state 36
-    INT_CONST    shift, and go to state 38
-    BOOL_CONST   shift, and go to state 39
-    FLOAT_CONST  shift, and go to state 40
-    STR_CONST    shift, and go to state 41
-
-    constant  go to state 119
+    stmts_list     go to state 144
+    stmt           go to state 110
+    withSemcol     go to state 20
+    withoutSemcol  go to state 21
+    DECLARATION    go to state 22
+    assign_stmt    go to state 23
+    LHS            go to state 24
+    return_stmt    go to state 25
+    printSTMT      go to state 26
+    func_call      go to state 27
+    loop           go to state 28
+    conditional    go to state 29
+    data_type      go to state 30
 
 
-State 118
+State 144
 
-   31 else_stmt: ELSE '{' stmts_list • '}'
+   60 else_stmt: ELSE '{' stmts_list • '}'
 
-    '}'  shift, and go to state 120
-
-
-State 119
-
-   47 id_list: id_list ',' constant •
-
-    $default  reduce using rule 47 (id_list)
+    '}'  shift, and go to state 145
 
 
-State 120
+State 145
 
-   31 else_stmt: ELSE '{' stmts_list '}' •
+   60 else_stmt: ELSE '{' stmts_list '}' •
 
-    $default  reduce using rule 31 (else_stmt)
+    $default  reduce using rule 60 (else_stmt)

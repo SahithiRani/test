@@ -24,12 +24,7 @@ extern FILE * yyin;
 %token PRINT SCAN FUNC RETURN CONTINUE 
 
 %token ';' '<' '>' '{' '}' '(' ')' '[' ']' ','
-// %token program functions function function_name data_type params param_list param
-// %token stmts_list stmt withSemcol withoutSemcol
-// %token array_decl return_stmt func_call func_type
-// %token loop conditional conditions else_stmt boolean bi_logic_cond rel_op op
-// %token expr array_assign assign_stmt assignment args_list args id_list
-// %token constant arr value
+
 
 %%
 program:                         
@@ -45,8 +40,9 @@ items_list: item items_list
       
       ; 
 item:
-      function | stmt
-
+      function 
+      | stmt
+      ;
 function:                         
       FUNC function_name '{' stmts_list '}' ;
 
@@ -65,6 +61,15 @@ param_list:
       | param
       ;
 
+param: data_type ID arrayBRACKETS ; 
+
+arrayBRACKETS: '[' INT_CONST ']' 
+      
+      | arrayBRACKETS '['INT_CONST']'
+      
+      | 
+      ;
+
 stmts_list:                       
       stmt stmts_list 
       
@@ -72,17 +77,16 @@ stmts_list:
       ;
 
 stmt:                             
-      {printf("LINECOUNT for Stmt is %d",LINECOUNT);} withSemcol ';'          
+
+      withSemcol ';'          
       
       | withoutSemcol 
       ;
 
 withSemcol:                       
-      param 
+      DECLARATION
       
-      | assign_stmt
-      
-      | array_decl 
+      | assign_stmt         
       
       | return_stmt 
       
@@ -91,6 +95,8 @@ withSemcol:
       | BREAK 
       
       | CONTINUE 
+
+      | printSTMT
       ;
       
 withoutSemcol:                    
@@ -99,43 +105,61 @@ withoutSemcol:
       | conditional
       ;
 
+DECLARATION:
+      data_type id_LIST;
+
+id_LIST: 
+      oneID ',' id_LIST 
+      | oneID;
+
+oneID : 
+      ID arr_optional_assign;
+
+arr_optional_assign : 
+      arrayBRACKETS     
+
+      |
+
+      opt_assign
+      ;
+
+opt_assign:
+      ASSIGN expr
+      |  
+      ;
 assign_stmt:                      
-      param assignment 
-      
-      | arr assignment
+      LHS ASSIGN RHS
+      ;
+LHS: 
+      ID isARRAY;
+
+isARRAY: 
+      arrayBRACKETS 
+      |
+      ; 
+RHS:  
+      expr 
+      | SCAN '(' data_type ')'
       ;
 
-loop: LOOP ;
-
-conditional:                      
-      IF '(' conditions ')' '{' stmts_list '}' else_stmt;
-
-else_stmt:                       
-      ELSE '{' stmts_list '}' 
-      
-      | /* EMPTY */ 
-      ;
-
-conditions:                       
-      boolean 
-      
-      | boolean bi_logic_cond conditions 
-      
-      | NOT conditions 
-      ;
-
-boolean:                          
-      boolean  rel_op  expr 
-      
-      | expr 
-      ;
 
 return_stmt:                      
       RETURN expr 
       ;
 
-array_decl:                       
-      param '[' INT_CONST ']' array_assign 
+printSTMT:
+      PRINT '(' printables ')'
+      ;
+
+printables: 
+      printables '+' printable
+      
+      | printable
+      ;
+printable: 
+      STR_CONST
+
+      | LHS
       ;
 
 func_call:                        
@@ -150,26 +174,10 @@ args_list:
       ;
 
 args:                             
-      args ',' expr 
+      args ',' expr
     
       | expr 
       ;
-
-array_assign:                     
-      ASSIGN '[' id_list ']'
-      
-      | /* EMPTY */ 
-      ;
-
-id_list:                          
-      id_list ',' constant 
-      
-      | constant 
-      ;
-
-param: data_type ID ; 
-    
-assignment: ASSIGN expr ;
 
 expr:                        
       expr op value
@@ -182,14 +190,39 @@ value:
       
       | constant 
     
-      | arr
+      | LHS
+
+      | '(' expr ')'
       ; 
 
-arr:                              
-      ID '[' expr ']' 
+loop: 
+      LOOP '(' conditions ')' '{' stmts_list '}';
+
+conditional:                      
+      IF '(' conditions ')' '{' stmts_list '}' else_stmt;
+
+else_stmt:                       
+      ELSE '{' stmts_list '}' 
       
-      | ID 
-      ; 
+      | /* EMPTY */ 
+      ;
+
+conditions:                       
+      boolean 
+      
+      | boolean bi_logic_OP conditions 
+      
+      | NOT conditions 
+
+      | '(' conditions ')'
+      ;
+
+boolean:                          
+      boolean rel_op expr 
+      
+      | expr 
+      ;
+
 
 data_type:                        
       INT 
@@ -228,7 +261,7 @@ rel_op:
       | NEQ
       ;
 
-bi_logic_cond:                    
+bi_logic_OP:                    
       AND 
       
       | OR 
