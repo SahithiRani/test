@@ -1,0 +1,16 @@
+# Program to find sum of digits in a number func int find_sum(int n) 
+{ 
+    int m, sum=0; 
+    loop (n>0) 
+    { 
+        m=n%10; 
+        sum=sum+m; 
+        n=n/10; 
+    }
+    return sum; 
+} 
+int n; 
+print("Enter a number: "); 
+n=scan(); 
+int sum=find_sum(n); 
+print("Sum of digits of"+ n + "is: "+ sum);

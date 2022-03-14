@@ -1,0 +1,15 @@
+# Program to print sum of first n natural numbers 
+
+notaNumber=100;
+int notaNumber;
+print("Enter a positive integer: "); 
+
+int sum=0;
+int i=1; 
+n=scan(); 
+loop (i<-n) 
+{ 
+    sum = sum+i; 
+    i=i+1; 
+}    
+print("Sum= "+sum);
