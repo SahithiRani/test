@@ -63,9 +63,8 @@ param_list:
 
 param: data_type ID arrayBRACKETS ; 
 
-arrayBRACKETS: '[' INT_CONST ']' 
-      
-      | arrayBRACKETS '['INT_CONST']'
+arrayBRACKETS: 
+       arrayBRACKETS '['INT_CONST']'
       
       | 
       ;
@@ -115,6 +114,8 @@ id_LIST:
 oneID : 
       ID arr_optional_assign;
 
+// NON - WORKING VERSION
+// IDEA -> if '=' => def opt_assign; else if 'arr[]' OR ID => arrayBRACKETS(which will expand to empty or brackets)
 arr_optional_assign : 
       arrayBRACKETS     
 
@@ -123,9 +124,10 @@ arr_optional_assign :
       opt_assign
       ;
 
+
 opt_assign:
       ASSIGN expr
-      |  
+
       ;
 assign_stmt:                      
       LHS ASSIGN RHS
@@ -135,7 +137,6 @@ LHS:
 
 isARRAY: 
       arrayBRACKETS 
-      |
       ; 
 RHS:  
       expr 
@@ -214,7 +215,8 @@ conditions:
       
       | NOT conditions 
 
-      | '(' conditions ')'
+      // How to deal with bracket conditions
+      // | '(' conditions ')'
       ;
 
 boolean:                          
